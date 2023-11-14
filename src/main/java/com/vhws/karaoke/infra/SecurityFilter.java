@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,7 +52,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     private void handleException(HttpServletResponse response, Exception e) {
         Consumer<HttpServletResponse> errorSender = httpResponse -> {
             try {
-                httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error");
+                httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ocorreu um erro no servidor");
             } catch (IOException ex) {
 
                 ex.printStackTrace();
