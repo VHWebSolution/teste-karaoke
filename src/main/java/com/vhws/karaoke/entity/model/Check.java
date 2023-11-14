@@ -35,6 +35,12 @@ public class Check {
         this.nextSong = nextSong;
     }
 
+    public Check(House house, String houseName, Integer checkNumber) {
+        this.house=house;
+        this.houseName=houseName;
+        this.checkNumber=checkNumber;
+    }
+
     public String getCheckId() {
         return checkId;
     }

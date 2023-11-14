@@ -16,6 +16,7 @@ import com.vhws.karaoke.repository.CheckRepository;
 import com.vhws.karaoke.repository.HouseRepository;
 import com.vhws.karaoke.repository.MusicRepository;
 import com.vhws.karaoke.repository.PlaylistRepository;
+import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -129,10 +130,25 @@ public class GeneralService {
        List<Check> checkList = house.getCheckList();
        List<CustomersIn> costumersInList = new ArrayList<>();
        for(Check check:checkList){
+           if(check.getCostumerName()==null){
+               check.setCostumerName("Em aberto");
+           }
            CustomersIn costumersIn = new CustomersIn(check.getCostumerName(), check.getCheckNumber(), check.getNextSong());
            costumersInList.add(costumersIn);
        }
        return costumersInList;
+    }
+
+    public List<MusicDTO> searchMusic(String search){
+    List<Music> songList = musicRepository.findMusicsByCriteria(search);
+    if(songList.isEmpty())
+        throw new ResourceNotFoundException("No song were found!");
+    List<MusicDTO> songsDTOlist = new ArrayList<>();
+    for(Music song : songList){
+        MusicDTO songDTO = createMusicDTO(song);
+        songsDTOlist.add(songDTO);
+    }
+    return songsDTOlist;
     }
 
     public HouseDTO addHouse(HouseRequest houseRequest){
@@ -153,8 +169,8 @@ public class GeneralService {
                 throw new ResourceBadRequestException("This check already exist.");
             }
         }
-       Check check = new Check(checkDTO.getCheckId(), checkDTO.getHouse(), checkDTO.getCustomerName(), checkDTO.getHouseName(), checkDTO.getCheckNumber(),
-               checkDTO.isTaken(), checkDTO.isOpen(), checkDTO.getNextSong());
+       Check check = new Check(house, house.getHouseName(), checkDTO.getCheckNumber());
+        check = checkRepository.save(check);
         checkList.add(check);
         house.setCheckList(checkList);
         houseRepository.save(house);
@@ -179,24 +195,28 @@ public class GeneralService {
 
 
     public CheckDTO checkInValidation(CheckDTO checkDTO, String houseId){
-        Check check = checkRepository.findWhereNotTaken(houseId);
-        if(check.equals(null))
+        List<Check> checks = checkRepository.findWhereNotTaken(houseId);
+        if (checks.isEmpty()) {
             throw new ResourceNotFoundException("Check not found!");
+        }
+        Check check = checks.get(0);
         Optional<House> houseOptional = houseRepository.findById(houseId);
         if(houseOptional.isEmpty())
             throw new ResourceNotFoundException("House not found!");
         House house = houseOptional.get();
         List<Check> checkList = house.getCheckList();
-        for(Check checkFor:checkList){
-            if(check.equals(checkFor)){
-                checkFor.setCostumerName(checkDTO.getCustomerName());
-                checkFor.setOpen(true);
-                checkFor.setTaken(true);
+        for(Check checkFor:checkList) {
+            if (check.equals(checkFor)) {
+                check.setCostumerName(checkDTO.getCustomerName());
+                check.setTaken(true);
+                check.setOpen(true);
+                checkRepository.save(check);
             }
         }
-        house.setCheckList(checkList);
-        houseRepository.save(house);
         checkDTO.setCheckId(check.getCheckId());
+        checkDTO.setCheckNumber(check.getCheckNumber());
+        checkDTO.setOpen(check.isOpen());
+        checkDTO.setTaken(check.isTaken());
         return checkDTO;
     }
 
@@ -207,8 +227,7 @@ public class GeneralService {
         Check check = checkOptional.get();
         check.setOpen(false);
         checkRepository.save(check);
-        CheckDTO checkDTO = new CheckDTO(check.getCheckId(), check.getHouse(),check.getCostumerName(),check.getHouseName(),check.getCheckNumber()
-                ,check.isTaken(),check.isOpen(),check.getNextSong());
+        CheckDTO checkDTO = createCheckDTO(check);
         return checkDTO;
     }
 
@@ -230,18 +249,12 @@ public class GeneralService {
     }
 
     public List<MusicDTO> addToNextSong(String houseId, String checkId, String musicId){
-        Optional<House> houseOptional = houseRepository.findById(houseId);
-        if(houseOptional.isEmpty())
-            throw new ResourceNotFoundException("House not found!");
-        Optional<Check> checkOptional = checkRepository.findById(checkId);
-        if(checkOptional.isEmpty())
-            throw new ResourceNotFoundException("Check not found!");
-        Optional<Music> musicOptional = musicRepository.findById(musicId);
-        if(musicOptional.isEmpty())
-            throw new ResourceNotFoundException("Music not found!");
-        House house = houseOptional.get();
-        Check check = checkOptional.get();
-        Music music = musicOptional.get();
+        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+        Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
+        Music music = musicRepository.findById(musicId).orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
+        if(check.getNextSong()!=null){
+            throw new ResourceBadRequestException("This check is already on the list!");
+        }
         List<Music> nextSongs = house.getNextSongs();
         nextSongs.add(music);
         house.setNextSongs(nextSongs);
@@ -250,21 +263,22 @@ public class GeneralService {
         checkRepository.save(check);
         List<MusicDTO> musicDTOList = new ArrayList<>();
         for(Music musicFor:nextSongs){
-            MusicDTO musicDTO = new MusicDTO(musicFor.getMusicId(), musicFor.getTitle(), musicFor.getMusicGenre(), musicFor.getMusicTag(),
-                    musicFor.getArtist(), musicFor.getAlbum(), musicFor.getLink(), musicFor.getRunningTime());
+            MusicDTO musicDTO = createMusicDTO(musicFor);
             musicDTOList.add(musicDTO);
         }
         return musicDTOList;
     }
 
-    public List<MusicDTO> addToPreviousSong(String houseId, String checkId,String musicId){
+    public List<MusicDTO> addToPreviousSong(String houseId, String checkId){
        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
        Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
-       Music music = musicRepository.findById(musicId).orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
+       if(check.getNextSong()==null){
+           throw new ResourceBadRequestException("This check has no songs on the list!");
+       }
        List<Music> nextSongs = house.getNextSongs();
-       nextSongs.remove(music);
+       nextSongs.remove(check.getNextSong());
        List<Music> previousSongs = house.getPreviousSongs();
-       previousSongs.add(music);
+       previousSongs.add(check.getNextSong());
        house.setPreviousSongs(previousSongs);
        house.setNextSongs(nextSongs);
        check.setNextSong(null);
@@ -272,8 +286,7 @@ public class GeneralService {
        checkRepository.save(check);
        List<MusicDTO> musicDTOList = new ArrayList<>();
        for(Music song:previousSongs){
-           MusicDTO musicDTO = new MusicDTO(song.getMusicId(), song.getTitle(), song.getMusicGenre(), song.getMusicTag(),
-                   song.getArtist(), song.getAlbum(), song.getLink(), song.getRunningTime());
+           MusicDTO musicDTO = createMusicDTO(song);
            musicDTOList.add(musicDTO);
        }
        return musicDTOList;
@@ -340,6 +353,12 @@ public class GeneralService {
 
         if (checkDTO.getHouse() != null){
             check.setHouse(check.getHouse());
+        }
+        if(checkDTO.isOpen() != check.isOpen()){
+            check.setOpen(checkDTO.isOpen());
+        }
+        if(checkDTO.isTaken() != check.isTaken()){
+            check.setTaken(checkDTO.isTaken());
         }
 
         checkRepository.save(check);
@@ -418,6 +437,14 @@ public class GeneralService {
     public void deleteHouse(String houseId){
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+        List<Check> checkList = house.getCheckList();
+        house.setCheckList(null);
+        for(Check check:checkList){
+            check.setHouse(null);
+            checkRepository.delete(check);
+        }
+        house.setPreviousSongs(null);
+        house.setNextSongs(null);
 
         houseRepository.delete(house);
     }
@@ -425,21 +452,42 @@ public class GeneralService {
     public void deleteCheck(String checkId){
         Check check = checkRepository.findById(checkId)
                 .orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
-
+        House house = check.getHouse();
+        List<Check> checkList = house.getCheckList();
+        checkList.remove(check);
+        house.setCheckList(checkList);
+        houseRepository.save(house);
+        check.setHouse(null);
         checkRepository.delete(check);
     }
 
     public void deleteMusic(String musicId){
         Music music = musicRepository.findById(musicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
-
+        List<House> houseList = houseRepository.findAll();
+        for(House house:houseList){
+            List<Music> nextSongs = house.getNextSongs();
+            nextSongs.remove(music);
+            List<Music> previousSongs = house.getPreviousSongs();
+            previousSongs.remove(music);
+            house.setNextSongs(nextSongs);
+            house.setPreviousSongs(previousSongs);
+            houseRepository.save(house);
+        }
+        List<Playlist> playlistList = playlistRepository.findAll();
+        for(Playlist playlist:playlistList){
+            List<Music> songs = playlist.getSongs();
+            songs.remove(music);
+            playlist.setSongs(songs);
+            playlistRepository.save(playlist);
+        }
         musicRepository.delete(music);
     }
 
     public void deletePlaylist(String playListId){
         Playlist playlist = playlistRepository.findById(playListId)
                 .orElseThrow(() -> new ResourceNotFoundException("Playlist not found!"));
-
+        playlist.setSongs(null);
         playlistRepository.delete(playlist);
     }
 

@@ -93,6 +93,12 @@ public class GeneralController {
     return new ResponseEntity<>(customersIn, HttpStatus.OK);
     }
 
+    @GetMapping("/searchMusic/{search}")
+    public ResponseEntity<List<MusicDTO>> searchMusic(@PathVariable String search){
+    List<MusicDTO> songs = generalService.searchMusic(search);
+    return new ResponseEntity<>(songs, HttpStatus.OK);
+    }
+
     @PostMapping("/addHouse")
     public ResponseEntity<HouseDTO> addHouse(@RequestBody HouseRequest houseRequest){
     HouseDTO houseDTO = generalService.addHouse(houseRequest);
@@ -141,9 +147,9 @@ public class GeneralController {
     return new ResponseEntity<>(musicDTOs, HttpStatus.OK);
     }
 
-    @PutMapping("/addToPreviousSong/{houseId}/{checkId}/{musicId}")
-    public ResponseEntity<List<MusicDTO>> addToPreviousSong(@PathVariable String houseId, @PathVariable String checkID, @PathVariable String musicId){
-    List<MusicDTO> musicDTOs = generalService.addToPreviousSong(houseId, checkID, musicId);
+    @PutMapping("/addToPreviousSong/{houseId}/{checkId}")
+    public ResponseEntity<List<MusicDTO>> addToPreviousSong(@PathVariable String houseId, @PathVariable String checkId){
+    List<MusicDTO> musicDTOs = generalService.addToPreviousSong(houseId, checkId);
     return new ResponseEntity<>(musicDTOs, HttpStatus.OK);
     }
 
@@ -190,8 +196,8 @@ public class GeneralController {
     }
 
     @DeleteMapping("/deletePlaylist/{playlistId}")
-    public ResponseEntity<?> deletePlaylist(@PathVariable String playListId){
-    generalService.deletePlaylist(playListId);
+    public ResponseEntity<?> deletePlaylist(@PathVariable String playlistId){
+    generalService.deletePlaylist(playlistId);
     return new ResponseEntity<>("Playlist deleted with success!", HttpStatus.OK);
     }
 

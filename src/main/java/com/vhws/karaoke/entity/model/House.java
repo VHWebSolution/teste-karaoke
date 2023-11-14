@@ -1,5 +1,6 @@
 package com.vhws.karaoke.entity.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class House {
     private String phone;
     private String address;
     @OneToMany(mappedBy = "house")
+    @JsonIgnore
     private List<Check> checkList;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "previous_song_list", joinColumns = {
