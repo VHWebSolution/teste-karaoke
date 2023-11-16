@@ -9,7 +9,7 @@ public class Check {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "check_id")
     private String checkId;
-    private String costumerName;
+    private String customer;
     private String houseName;
     private Integer checkNumber;
     private boolean taken;
@@ -24,10 +24,10 @@ public class Check {
     public Check() {
     }
 
-    public Check(String checkId, House house, String costumerName, String houseName, Integer checkNumber, boolean taken, boolean open, Music nextSong) {
+    public Check(String checkId, House house, String customer, String houseName, Integer checkNumber, boolean taken, boolean open, Music nextSong) {
         this.checkId = checkId;
         this.house = house;
-        this.costumerName = costumerName;
+        this.customer = customer;
         this.houseName = houseName;
         this.checkNumber = checkNumber;
         this.taken = taken;
@@ -49,12 +49,12 @@ public class Check {
         this.checkId = checkId;
     }
 
-    public String getCostumerName() {
-        return costumerName;
+    public String getCustomerName() {
+        return customer;
     }
 
-    public void setCostumerName(String costumerName) {
-        this.costumerName = costumerName;
+    public void setCustomerName(String customer) {
+        this.customer = customer;
     }
 
     public String getHouseName() {

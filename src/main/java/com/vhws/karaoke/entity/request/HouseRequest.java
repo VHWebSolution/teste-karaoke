@@ -1,4 +1,4 @@
-package com.vhws.karaoke.entity;
+package com.vhws.karaoke.entity.request;
 
 public class HouseRequest {
     private String houseName;
