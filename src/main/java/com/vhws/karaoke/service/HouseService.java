@@ -1,19 +1,27 @@
 package com.vhws.karaoke.service;
 
-import com.vhws.karaoke.entity.request.HouseRequest;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.vhws.karaoke.entity.dto.HouseDTO;
+import com.vhws.karaoke.entity.dto.ReportDTO;
 import com.vhws.karaoke.entity.ecxeption.ResourceNotFoundException;
 import com.vhws.karaoke.entity.model.Check;
 import com.vhws.karaoke.entity.model.House;
+import com.vhws.karaoke.entity.model.Report;
+import com.vhws.karaoke.entity.request.HouseRequest;
 import com.vhws.karaoke.entity.response.CustomersIn;
 import com.vhws.karaoke.repository.CheckRepository;
 import com.vhws.karaoke.repository.HouseRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import com.vhws.karaoke.repository.ReportRepository;
 
 @Service
 public class HouseService {
@@ -21,6 +29,8 @@ public class HouseService {
     private HouseRepository houseRepository;
     @Autowired
     private CheckRepository checkRepository;
+    @Autowired
+    private ReportRepository reportRepository;
 
     public List<HouseDTO> showAllHouses() {
         List<House> houseList = houseRepository.findAll();
@@ -60,14 +70,48 @@ public class HouseService {
         return costumersInList;
     }
 
-    public HouseDTO addHouse(HouseRequest houseRequest){
+    public HouseDTO addHouse(HouseRequest houseRequest, MultipartFile file) throws IOException {
         House house = new House(houseRequest.getHouseName(),houseRequest.getCnpj(), houseRequest.getPhone(), houseRequest.getAddress());
+        if(file != null){
+            house.setPicture(file.getBytes());
+        }
         house = houseRepository.save(house);
         HouseDTO houseDTO = createHouseDTO(house);
         return houseDTO;
     }
 
-    public HouseDTO changeHouse(HouseDTO houseDTO, String houseId) {
+    public ReportDTO closing(String houseId){
+        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+
+        int numberOfSongs = house.getPreviousSongs().size();
+        int numberOfCustomers = 0;
+
+        for(Check check:house.getCheckList()){
+            if(check.isTaken()==true){
+                numberOfCustomers++;
+            }
+        }
+
+        house.setPreviousSongs(null);
+        house.setNextSongs(null);
+
+        List<Check> checkList = house.getCheckList();
+        for(Check c:checkList){
+            if(c.isTaken()==true){
+                c.setCustomerName(null);
+                c.setOpen(false);
+                c.setTaken(false);
+                checkRepository.save(c);
+            }
+        }
+
+        house = houseRepository.save(house);
+        Report report = new Report(numberOfCustomers,numberOfSongs, house);
+        report = reportRepository.save(report);
+
+        return new ReportDTO(report.getReportId(), report.getNumberOfCustomers(),report.getNumberOfSongs(),report.getHouse());
+    }
+    public HouseDTO changeHouse(HouseDTO houseDTO, String houseId, MultipartFile file) throws IOException {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new ResourceNotFoundException("House not found!"));
 
@@ -98,11 +142,27 @@ public class HouseService {
         if (houseDTO.getPreviousSongs() != null && !houseDTO.getPreviousSongs().isEmpty()) {
             house.setPreviousSongs(houseDTO.getPreviousSongs());
         }
+        if(file != null){
+            house.setPicture(file.getBytes());
+        }
 
         houseRepository.save(house);
 
         HouseDTO houseDTOResponse = createHouseDTO(house);
         return houseDTOResponse;
+    }
+
+
+    public Integer generateValidationNumber(String houseId){
+        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+
+        Random random = new Random();
+        Integer validationNumber = random.nextInt(9000)+1000;
+
+        house.setValidationNumber(validationNumber);
+        houseRepository.save(house);
+
+        return validationNumber;
     }
 
     public void deleteHouse(String houseId){
@@ -129,7 +189,8 @@ public class HouseService {
                 house.getAddress(),
                 house.getCheckList(),
                 house.getPreviousSongs(),
-                house.getNextSongs()
+                house.getNextSongs(),
+                Base64.getEncoder().encodeToString(house.getPicture())
         );
     }
 }

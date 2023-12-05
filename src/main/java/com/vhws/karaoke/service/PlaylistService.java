@@ -8,8 +8,11 @@ import com.vhws.karaoke.repository.MusicRepository;
 import com.vhws.karaoke.repository.PlaylistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +29,7 @@ public class PlaylistService {
             throw new ResourceNotFoundException("No playlists were found!");
         List<PlaylistDTO> playlistDTOs = new ArrayList<>();
         for (Playlist playlist : playlistList) {
-            PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), playlist.getPicture(), playlist.getSongs());
+            PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), Base64.getEncoder().encodeToString(playlist.getPicture()), playlist.getSongs());
             playlistDTOs.add(playlistDTO);
         }
         return playlistDTOs;
@@ -37,13 +40,13 @@ public class PlaylistService {
         if(playlistOptional.isEmpty())
             throw new ResourceNotFoundException("Playlist not found!");
         Playlist playlist = playlistOptional.get();
-        PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), playlist.getPicture(), playlist.getSongs());
+        PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), Base64.getEncoder().encodeToString(playlist.getPicture()), playlist.getSongs());
         return playlistDTO;
     }
 
-    public PlaylistDTO addPlaylist(PlaylistDTO playlistDTO){
+    public PlaylistDTO addPlaylist(PlaylistDTO playlistDTO, MultipartFile file) throws IOException {
         Playlist playlist = new Playlist(playlistDTO.getPlayListId(),playlistDTO.getName(),playlistDTO.getDescription(),
-                playlistDTO.getPicture(),playlistDTO.getSongs());
+                file.getBytes(),playlistDTO.getSongs());
         playlist = playlistRepository.save(playlist);
         playlistDTO.setPlayListId(playlist.getPlayListId());
         return playlistDTO;
@@ -62,11 +65,11 @@ public class PlaylistService {
         musicList.add(music);
         playlist.setSongs(musicList);
         playlistRepository.save(playlist);
-        PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), playlist.getPicture(), playlist.getSongs());
+        PlaylistDTO playlistDTO = new PlaylistDTO(playlist.getPlayListId(), playlist.getName(), playlist.getDescription(), Base64.getEncoder().encodeToString(playlist.getPicture()), playlist.getSongs());
         return playlistDTO;
     }
 
-    public PlaylistDTO changePlaylist(PlaylistDTO playlistDTO, String playlistId){
+    public PlaylistDTO changePlaylist(PlaylistDTO playlistDTO, String playlistId, MultipartFile file) throws IOException {
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Playlist not found!"));
         if (playlistDTO.getName() != null && !playlistDTO.getName().isEmpty()){
@@ -77,8 +80,8 @@ public class PlaylistService {
             playlist.setDescription(playlistDTO.getDescription());
         }
 
-        if (playlistDTO.getPicture() != null){
-            playlist.setPicture(playlistDTO.getPicture());
+        if (file != null){
+            playlist.setPicture(file.getBytes());
         }
 
         if (playlistDTO.getSongs() != null && !playlistDTO.getSongs().isEmpty()){
@@ -103,7 +106,7 @@ public class PlaylistService {
                 playlist.getPlayListId(),
                 playlist.getName(),
                 playlist.getDescription(),
-                playlist.getPicture(),
+                Base64.getEncoder().encodeToString(playlist.getPicture()),
                 playlist.getSongs()
         );
     }

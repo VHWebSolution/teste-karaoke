@@ -1,12 +1,12 @@
 package com.vhws.karaoke.repository;
 
-import com.vhws.karaoke.entity.model.Check;
-import jakarta.persistence.NoResultException;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import com.vhws.karaoke.entity.model.Check;
 
 public interface CheckRepository extends JpaRepository<Check, String> {
     @Query("SELECT c FROM Check c WHERE c.house.houseId = :houseId AND c.taken = false")

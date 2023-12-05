@@ -4,9 +4,12 @@ import com.vhws.karaoke.entity.dto.PlaylistDTO;
 import com.vhws.karaoke.service.PlaylistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @CrossOrigin("*")
@@ -28,9 +31,10 @@ public class PlaylistController {
         return new ResponseEntity<>(playlistDTO, HttpStatus.OK);
     }
 
-    @PostMapping("/addPlaylist")
-    public ResponseEntity<PlaylistDTO> addPlaylist(@RequestBody PlaylistDTO playlistDTO){
-        playlistDTO = playlistService.addPlaylist(playlistDTO);
+    @PostMapping(value = "/addPlaylist", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PlaylistDTO> addPlaylist(@ModelAttribute PlaylistDTO playlistDTO,
+                                                   @RequestParam(value = "image", required = false) MultipartFile file) throws IOException {
+        playlistDTO = playlistService.addPlaylist(playlistDTO, file);
         return new ResponseEntity<>(playlistDTO, HttpStatus.CREATED);
     }
 
@@ -40,9 +44,11 @@ public class PlaylistController {
         return new ResponseEntity<>(playlistDTO, HttpStatus.OK);
     }
 
-    @PutMapping("/changePlaylist/{playlistID}")
-    public ResponseEntity<PlaylistDTO> changePlaylist(@RequestBody PlaylistDTO playlistDTO, @PathVariable String playlistId){
-        playlistDTO = playlistService.changePlaylist(playlistDTO, playlistId);
+    @PutMapping(value = "/changePlaylist/{playlistID}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<PlaylistDTO> changePlaylist(@ModelAttribute PlaylistDTO playlistDTO,
+                                                      @PathVariable String playlistId,
+                                                      @RequestParam(value = "image", required = false) MultipartFile file) throws IOException {
+        playlistDTO = playlistService.changePlaylist(playlistDTO, playlistId, file);
         return new ResponseEntity<>(playlistDTO, HttpStatus.OK);
     }
 

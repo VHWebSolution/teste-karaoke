@@ -60,16 +60,16 @@ public class CheckService {
         return checkDTO;
     }
 
-    public CheckDTO checkInValidation(CheckDTO checkDTO, String houseId){
+    public CheckDTO checkInValidation(CheckDTO checkDTO, String houseId, int validationNumber){
+        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+        if(validationNumber != house.getValidationNumber())
+            throw new ResourceBadRequestException("The validation number is incorrect!");
+
         List<Check> checks = checkRepository.findWhereNotTaken(houseId);
         if (checks.isEmpty()) {
             throw new ResourceNotFoundException("Check not found!");
         }
         Check check = checks.get(0);
-        Optional<House> houseOptional = houseRepository.findById(houseId);
-        if(houseOptional.isEmpty())
-            throw new ResourceNotFoundException("House not found!");
-        House house = houseOptional.get();
         List<Check> checkList = house.getCheckList();
         for(Check checkFor:checkList) {
             if (check.equals(checkFor)) {

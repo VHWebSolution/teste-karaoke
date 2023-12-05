@@ -53,9 +53,9 @@ public class CheckController {
         return new ResponseEntity<>(checkDTO, HttpStatus.CREATED);
     }
 
-    @PutMapping("/checkInValidation/{houseId}")
-    public ResponseEntity<CheckDTO> checkInValidation(@RequestBody CheckDTO checkDTO, @PathVariable String houseId){
-        checkDTO = checkService.checkInValidation(checkDTO, houseId);
+    @PutMapping("/checkInValidation/{houseId}/{validationNumber}")
+    public ResponseEntity<CheckDTO> checkInValidation(@RequestBody CheckDTO checkDTO, @PathVariable String houseId, @PathVariable Integer validationNumber){
+        checkDTO = checkService.checkInValidation(checkDTO, houseId, validationNumber);
         return new ResponseEntity<>(checkDTO, HttpStatus.OK);
     }
 

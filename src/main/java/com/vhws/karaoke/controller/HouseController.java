@@ -1,14 +1,18 @@
 package com.vhws.karaoke.controller;
 
+import com.vhws.karaoke.entity.dto.ReportDTO;
 import com.vhws.karaoke.entity.request.HouseRequest;
 import com.vhws.karaoke.entity.dto.HouseDTO;
 import com.vhws.karaoke.entity.response.CustomersIn;
 import com.vhws.karaoke.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 @CrossOrigin("*")
 @RestController
@@ -34,16 +38,31 @@ public class HouseController {
         return new ResponseEntity<>(customersIn, HttpStatus.OK);
     }
 
-    @PostMapping("/addHouse")
-    public ResponseEntity<HouseDTO> addHouse(@RequestBody HouseRequest houseRequest){
-        HouseDTO houseDTO = houseService.addHouse(houseRequest);
+    @PostMapping(value = "/addHouse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HouseDTO> addHouse(@ModelAttribute HouseRequest houseRequest,
+                                             @RequestParam(value = "image", required = false) MultipartFile file) throws IOException {
+        HouseDTO houseDTO = houseService.addHouse(houseRequest, file);
         return new ResponseEntity<>(houseDTO, HttpStatus.CREATED);
     }
 
-    @PutMapping("/changeHouse/{houseId}")
-    public ResponseEntity<HouseDTO> changeHouse(@RequestBody HouseDTO houseDTO, @PathVariable String houseId){
-        houseDTO = houseService.changeHouse(houseDTO, houseId);
+    @PutMapping("/closing/{houseId}")
+    public ResponseEntity<ReportDTO> closing(@PathVariable String houseId){
+        ReportDTO reportDTO = houseService.closing(houseId);
+        return new ResponseEntity<>(reportDTO, HttpStatus.OK);
+    }
+
+    @PutMapping(value = "/changeHouse/{houseId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HouseDTO> changeHouse(@ModelAttribute HouseDTO houseDTO,
+                                                @PathVariable String houseId,
+                                                @RequestParam(value = "image", required = false) MultipartFile file) throws IOException {
+        houseDTO = houseService.changeHouse(houseDTO, houseId, file);
         return new ResponseEntity<>(houseDTO, HttpStatus.OK);
+    }
+
+    @PutMapping("/generateValidationNumber/{houseId}")
+    public ResponseEntity<Integer> generateValidationNumber(@PathVariable String houseId){
+        Integer validationNumber = houseService.generateValidationNumber(houseId);
+        return new ResponseEntity<>(validationNumber,HttpStatus.OK);
     }
 
     @DeleteMapping("/deleteHouse/{houseId}")

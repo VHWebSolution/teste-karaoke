@@ -2,8 +2,6 @@ package com.vhws.karaoke.entity.dto;
 
 import com.vhws.karaoke.entity.model.House;
 import com.vhws.karaoke.entity.model.Music;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 
 public class CheckDTO {
     private String checkId;
