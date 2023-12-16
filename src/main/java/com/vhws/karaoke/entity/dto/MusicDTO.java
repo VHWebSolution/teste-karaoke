@@ -8,12 +8,12 @@ public class MusicDTO {
     private String artist;
     private String album;
     private String link;
-    private String runningTime;
+    private int runningTime;
 
     public MusicDTO() {
     }
 
-    public MusicDTO(String musicId, String title, String musicGenre, String musicTag, String artist, String album, String link, String runningTime) {
+    public MusicDTO(String musicId, String title, String musicGenre, String musicTag, String artist, String album, String link, int runningTime) {
         this.musicId = musicId;
         this.title = title;
         this.musicGenre = musicGenre;
@@ -80,11 +80,11 @@ public class MusicDTO {
         this.link = link;
     }
 
-    public String getRunningTime() {
+    public int getRunningTime() {
         return runningTime;
     }
 
-    public void setRunningTime(String runningTime) {
+    public void setRunningTime(int runningTime) {
         this.runningTime = runningTime;
     }
 }

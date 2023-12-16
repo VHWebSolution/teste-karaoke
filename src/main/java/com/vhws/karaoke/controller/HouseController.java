@@ -4,6 +4,7 @@ import com.vhws.karaoke.entity.dto.ReportDTO;
 import com.vhws.karaoke.entity.request.HouseRequest;
 import com.vhws.karaoke.entity.dto.HouseDTO;
 import com.vhws.karaoke.entity.response.CustomersIn;
+import com.vhws.karaoke.entity.response.ReportResponse;
 import com.vhws.karaoke.service.HouseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,13 @@ public class HouseController {
     public ResponseEntity<List<CustomersIn>> showCustomersIn(@PathVariable String houseId){
         List<CustomersIn> customersIn = houseService.showCustomersIn(houseId);
         return new ResponseEntity<>(customersIn, HttpStatus.OK);
+    }
+
+    @GetMapping("/showReportByDate/{houseId}")
+    public ResponseEntity<List<ReportResponse>> showReportsByDate(@PathVariable String houseId){
+        List<ReportResponse> reportList = houseService.showReportsByDate(houseId);
+
+        return new ResponseEntity<>(reportList, HttpStatus.OK);
     }
 
     @PostMapping(value = "/addHouse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

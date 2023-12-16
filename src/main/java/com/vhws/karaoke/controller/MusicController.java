@@ -1,6 +1,7 @@
 package com.vhws.karaoke.controller;
 
 import com.vhws.karaoke.entity.dto.MusicDTO;
+import com.vhws.karaoke.entity.response.SongsOnListResponse;
 import com.vhws.karaoke.service.MusicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,8 +42,8 @@ public class MusicController {
     }
 
     @GetMapping("/showNextSongs/{houseId}")
-    public ResponseEntity<List<MusicDTO>> showNextSongs(@PathVariable String houseId){
-        List<MusicDTO> songs = musicService.showNextSongs(houseId);
+    public ResponseEntity<List<SongsOnListResponse>> showNextSongs(@PathVariable String houseId){
+        List<SongsOnListResponse> songs = musicService.showNextSongs(houseId); //nome da musica, o artista, nome do cliente, tempo de duração e id da musica;
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -53,9 +54,9 @@ public class MusicController {
     }
 
     @PutMapping("/addToNextSong/{houseId}/{checkId}/{musicId}")
-    public ResponseEntity<List<MusicDTO>> addToNextSong(@PathVariable String houseId, @PathVariable String checkId, @PathVariable String musicId){
-        List<MusicDTO> musicDTOs = musicService.addToNextSong(houseId, checkId, musicId);
-        return new ResponseEntity<>(musicDTOs, HttpStatus.OK);
+    public ResponseEntity<?> addToNextSong(@PathVariable String houseId, @PathVariable String checkId, @PathVariable String musicId){
+        musicService.addToNextSong(houseId, checkId, musicId);
+        return new ResponseEntity<>("Your song has been successfully added to the list", HttpStatus.OK);
     }
 
     @PutMapping("/addToPreviousSong/{houseId}/{checkId}")

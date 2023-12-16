@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -15,5 +17,6 @@ public class ReportDTO {
     private Long reportId;
     private int numberOfCustomers;
     private int numberOfSongs;
+    private Date dateOfReport;
     private House house;
 }

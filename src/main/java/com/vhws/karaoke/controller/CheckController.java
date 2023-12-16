@@ -6,6 +6,10 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.vhws.karaoke.entity.dto.CheckDTO;
+import com.vhws.karaoke.entity.request.CheckInValidationRequest;
+import com.vhws.karaoke.entity.request.MultipleChecksRequest;
+import com.vhws.karaoke.entity.response.CheckInValidationResponse;
+import com.vhws.karaoke.entity.response.CheckResponse;
 import com.vhws.karaoke.service.CheckService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +27,6 @@ import java.util.List;
 public class CheckController {
     @Autowired
     CheckService checkService;
-
     @GetMapping("/QRCodeCheckIn") //mudarURL
     public ResponseEntity<byte[]> generateQRCode() {
         String redirectToLogin = "https://vhwebsolutions.com.br/";
@@ -52,11 +55,17 @@ public class CheckController {
         checkDTO = checkService.addCheck(checkDTO, houseId);
         return new ResponseEntity<>(checkDTO, HttpStatus.CREATED);
     }
+    @PostMapping("/addMultipleChecks/{houseId}/{numberOfChecks}")
+    public ResponseEntity<?> addMultipleChecks(@PathVariable String houseId, @RequestBody MultipleChecksRequest multipleChecksRequest){
+        checkService.addMultipleChecks(houseId, multipleChecksRequest.numberOfChecks());
 
-    @PutMapping("/checkInValidation/{houseId}/{validationNumber}")
-    public ResponseEntity<CheckDTO> checkInValidation(@RequestBody CheckDTO checkDTO, @PathVariable String houseId, @PathVariable Integer validationNumber){
-        checkDTO = checkService.checkInValidation(checkDTO, houseId, validationNumber);
-        return new ResponseEntity<>(checkDTO, HttpStatus.OK);
+        return new ResponseEntity<>("Checks created successfully", HttpStatus.OK);
+    }
+
+    @PutMapping("/checkInValidation/{houseId}")
+    public ResponseEntity<CheckInValidationResponse> checkInValidation(@RequestBody CheckInValidationRequest checkDTO, @PathVariable String houseId){
+        CheckInValidationResponse checkInValidation = checkService.checkInValidation(checkDTO, houseId); //retornar só o ID
+        return new ResponseEntity<>(checkInValidation, HttpStatus.OK);
     }
 
     @PutMapping("/checkOut/{checkId}")

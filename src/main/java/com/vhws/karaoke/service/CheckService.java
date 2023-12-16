@@ -5,12 +5,16 @@ import com.vhws.karaoke.entity.ecxeption.ResourceBadRequestException;
 import com.vhws.karaoke.entity.ecxeption.ResourceNotFoundException;
 import com.vhws.karaoke.entity.model.Check;
 import com.vhws.karaoke.entity.model.House;
+import com.vhws.karaoke.entity.request.CheckInValidationRequest;
+import com.vhws.karaoke.entity.response.CheckInValidationResponse;
+import com.vhws.karaoke.entity.response.CheckResponse;
 import com.vhws.karaoke.repository.CheckRepository;
 import com.vhws.karaoke.repository.HouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,10 +63,31 @@ public class CheckService {
         houseRepository.save(house);
         return checkDTO;
     }
-
-    public CheckDTO checkInValidation(CheckDTO checkDTO, String houseId, int validationNumber){
+    public void addMultipleChecks(String houseId, int numberOfChecks){
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
-        if(validationNumber != house.getValidationNumber())
+
+        List<Integer> actualCheckNumbers = house.getCheckList().stream()
+                .map(Check::getCheckNumber).toList();
+
+        Collections.sort(actualCheckNumbers);
+        int newCheckNumber = actualCheckNumbers.get(actualCheckNumbers.size()-1) + 1;
+
+        List<Check> listOfNewChecks = new ArrayList<>();
+        for(int i = 1; i <= numberOfChecks; i++){
+            newCheckNumber = newCheckNumber + i;
+            Check newCheck = new Check(
+                    house,
+                    house.getHouseName(),
+                    newCheckNumber
+            );
+
+            listOfNewChecks.add(newCheck);
+        }
+        checkRepository.saveAll(listOfNewChecks);
+    }
+    public CheckInValidationResponse checkInValidation(CheckInValidationRequest checkDTO, String houseId){
+        House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
+        if(checkDTO.validationNumber() != house.getValidationNumber())
             throw new ResourceBadRequestException("The validation number is incorrect!");
 
         List<Check> checks = checkRepository.findWhereNotTaken(houseId);
@@ -73,17 +98,14 @@ public class CheckService {
         List<Check> checkList = house.getCheckList();
         for(Check checkFor:checkList) {
             if (check.equals(checkFor)) {
-                check.setCustomerName(checkDTO.getCustomerName());
+                check.setCustomerName(checkDTO.customerName());
                 check.setTaken(true);
                 check.setOpen(true);
                 checkRepository.save(check);
             }
         }
-        checkDTO.setCheckId(check.getCheckId());
-        checkDTO.setCheckNumber(check.getCheckNumber());
-        checkDTO.setOpen(check.isOpen());
-        checkDTO.setTaken(check.isTaken());
-        return checkDTO;
+
+        return new CheckInValidationResponse(check.getCheckId());
     }
 
     public CheckDTO checkOut(String checkId){
@@ -91,6 +113,7 @@ public class CheckService {
         if(checkOptional.isEmpty())
             throw new ResourceNotFoundException("Check not found!");
         Check check = checkOptional.get();
+        check.setNextSong(null);
         check.setOpen(false);
         checkRepository.save(check);
         CheckDTO checkDTO = createCheckDTO(check);
@@ -142,6 +165,7 @@ public class CheckService {
                 c.setCustomerName(null);
                 c.setOpen(false);
                 c.setTaken(false);
+                c.setNextSong(null);
                 checkRepository.save(c);
             }
             CheckDTO checkDTO = createCheckDTO(c);

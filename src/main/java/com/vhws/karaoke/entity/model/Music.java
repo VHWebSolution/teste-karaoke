@@ -15,12 +15,12 @@ public class Music {
     private String artist;
     private String album;
     private String link;
-    private String runningTime;
+    private int runningTime;
 
     public Music() {
     }
 
-    public Music(String musicId, String title, String musicGenre, String musicTag, String artist, String album, String link, String runningTime) {
+    public Music(String musicId, String title, String musicGenre, String musicTag, String artist, String album, String link, int runningTime) {
         this.musicId = musicId;
         this.title = title;
         this.musicGenre = musicGenre;
@@ -87,11 +87,11 @@ public class Music {
         this.link = link;
     }
 
-    public String getRunningTime() {
+    public int getRunningTime() {
         return runningTime;
     }
 
-    public void setRunningTime(String runningTime) {
+    public void setRunningTime(int runningTime) {
         this.runningTime = runningTime;
     }
 }

@@ -1,12 +1,10 @@
 package com.vhws.karaoke.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
+import com.vhws.karaoke.entity.response.ReportResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -101,15 +99,35 @@ public class HouseService {
                 c.setCustomerName(null);
                 c.setOpen(false);
                 c.setTaken(false);
+                c.setNextSong(null);
                 checkRepository.save(c);
             }
         }
 
         house = houseRepository.save(house);
-        Report report = new Report(numberOfCustomers,numberOfSongs, house);
+        Report report = new Report(numberOfCustomers,numberOfSongs, new Date(), house);
         report = reportRepository.save(report);
 
-        return new ReportDTO(report.getReportId(), report.getNumberOfCustomers(),report.getNumberOfSongs(),report.getHouse());
+        return new ReportDTO(report.getReportId(), report.getNumberOfCustomers(),report.getNumberOfSongs(), report.getDateOfReport(),report.getHouse());
+    }
+
+    public List<ReportResponse> showReportsByDate(String houseId){
+        List<Report> report = reportRepository.findByHouseAndDate(houseId);
+
+        List<ReportResponse> reportResponses = new ArrayList<>();
+        for(Report r: report){
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+            String formattedDate = formatter.format(r.getDateOfReport());
+
+            ReportResponse reportResponse = new ReportResponse(
+                    r.getNumberOfCustomers(),
+                    r.getNumberOfSongs(),
+                    formattedDate
+            );
+            reportResponses.add(reportResponse);
+        }
+
+        return reportResponses;
     }
     public HouseDTO changeHouse(HouseDTO houseDTO, String houseId, MultipartFile file) throws IOException {
         House house = houseRepository.findById(houseId)

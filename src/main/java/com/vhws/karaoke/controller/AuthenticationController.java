@@ -33,19 +33,19 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
-
         var token = tokenService.generateToken((User) auth.getPrincipal());
+        User user = userRepository.findByLoginUser(data.login());
 
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        return ResponseEntity.ok(new LoginResponseDTO(token, user.getHouseId()));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data) {
+    @PostMapping("/register/{houseId}")
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data, @PathVariable String houseId) {
         if (this.userRepository.findByLogin(data.login()) != null)
             throw new ResourceBadRequestException("User already exists!");
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        User newUser = new User(data.login(), encryptedPassword, data.role());
+        User newUser = new User(data.login(), encryptedPassword, data.role(), houseId);
 
         this.userRepository.save(newUser);
 

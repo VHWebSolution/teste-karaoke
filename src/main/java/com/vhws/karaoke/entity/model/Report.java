@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 @Entity(name="report")
 @Getter
 @Setter
@@ -24,13 +26,15 @@ public class Report {
     private Long reportId;
     private int numberOfCustomers;
     private int numberOfSongs;
+    private Date dateOfReport;
     @ManyToOne
     @JoinColumn(name="house_id")
     private House house;
 
-    public Report(int numberOfCustomers, int numberOfSongs, House house) {
+    public Report(int numberOfCustomers, int numberOfSongs, Date dateOfReport, House house) {
         this.numberOfCustomers = numberOfCustomers;
         this.numberOfSongs = numberOfSongs;
+        this.dateOfReport = dateOfReport;
         this.house = house;
     }
 }
