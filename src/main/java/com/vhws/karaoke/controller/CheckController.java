@@ -9,6 +9,7 @@ import com.vhws.karaoke.entity.dto.CheckDTO;
 import com.vhws.karaoke.entity.request.CheckInValidationRequest;
 import com.vhws.karaoke.entity.request.MultipleChecksRequest;
 import com.vhws.karaoke.entity.response.CheckInValidationResponse;
+import com.vhws.karaoke.entity.response.CheckResponse;
 import com.vhws.karaoke.service.CheckService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;

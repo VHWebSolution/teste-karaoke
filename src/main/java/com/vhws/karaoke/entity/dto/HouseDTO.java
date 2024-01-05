@@ -3,8 +3,7 @@ package com.vhws.karaoke.entity.dto;
 import java.util.List;
 
 import com.vhws.karaoke.entity.model.Check;
-
-import com.vhws.karaoke.entity.model.SongsOnList;
+import com.vhws.karaoke.entity.model.Music;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +21,7 @@ public class HouseDTO {
     private String phone;
     private String address;
     private List<Check> checkList;
-    private List<SongsOnList> previousSongs;
-    private List<SongsOnList> nextSongs;
+    private List<Music> previousSongs;
+    private List<Music> nextSongs;
     private String picture;
 }

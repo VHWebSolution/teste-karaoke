@@ -11,7 +11,4 @@ import com.vhws.karaoke.entity.model.Check;
 public interface CheckRepository extends JpaRepository<Check, String> {
     @Query("SELECT c FROM Check c WHERE c.house.houseId = :houseId AND c.taken = false")
     List<Check> findWhereNotTaken(@Param("houseId") String houseId);
-
-    @Query("SELECT c FROM Check c WHERE c.music.musicId = :musicId")
-    Check findByMusicId(@Param("musicId") String musicId);
 }

@@ -7,6 +7,7 @@ import com.vhws.karaoke.entity.model.Check;
 import com.vhws.karaoke.entity.model.House;
 import com.vhws.karaoke.entity.request.CheckInValidationRequest;
 import com.vhws.karaoke.entity.response.CheckInValidationResponse;
+import com.vhws.karaoke.entity.response.CheckResponse;
 import com.vhws.karaoke.repository.CheckRepository;
 import com.vhws.karaoke.repository.HouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,6 @@ public class CheckService {
     private CheckRepository checkRepository;
     @Autowired
     private HouseRepository houseRepository;
-    
     public List<CheckDTO> showAllChecks() {
         List<Check> checkList = checkRepository.findAll();
         if (checkList.isEmpty())
@@ -82,7 +82,7 @@ public class CheckService {
 
         List<Check> listOfNewChecks = new ArrayList<>();
         for(int i = 1; i <= numberOfChecks; i++){
-            newCheckNumber = newCheckNumber + 1;
+            newCheckNumber = newCheckNumber + i;
             Check newCheck = new Check(
                     house,
                     house.getHouseName(),
