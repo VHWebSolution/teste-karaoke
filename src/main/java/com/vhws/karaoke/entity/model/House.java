@@ -31,16 +31,16 @@ public class House {
     @JoinTable(name = "previous_song_list", joinColumns = {
             @JoinColumn(name = "house_id")
     }, inverseJoinColumns = {
-            @JoinColumn(name = "music_id")
+            @JoinColumn(name = "song_on_list_id")
     })
-    private List<Music> previousSongs;
+    private List<SongsOnList> previousSongs;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "next_song_list", joinColumns = {
             @JoinColumn(name = "house_id")
     }, inverseJoinColumns = {
-            @JoinColumn(name = "music_id")
+            @JoinColumn(name = "song_on_list_id")
     })
-    private List<Music> nextSongs;
+    private List<SongsOnList> nextSongs;
     @OneToMany(mappedBy = "house")
     @JsonIgnore
     private List<Report> reports;
