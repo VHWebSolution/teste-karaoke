@@ -227,7 +227,8 @@ public class MusicService {
                 music.getArtist(),
                 music.getLink(),
                 music.getRunningTime(),
-                check.getCustomerName()
+                check.getCustomerName(),
+                check.getCheckId()
         );
     }
 }

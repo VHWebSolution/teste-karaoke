@@ -55,7 +55,7 @@ public class CheckController {
         checkDTO = checkService.addCheck(checkDTO, houseId);
         return new ResponseEntity<>(checkDTO, HttpStatus.CREATED);
     }
-    @PostMapping("/addMultipleChecks/{houseId}/{numberOfChecks}")
+    @PostMapping("/addMultipleChecks/{houseId}")
     public ResponseEntity<?> addMultipleChecks(@PathVariable String houseId, @RequestBody MultipleChecksRequest multipleChecksRequest){
         checkService.addMultipleChecks(houseId, multipleChecksRequest.numberOfChecks());
 

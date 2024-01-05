@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CheckService {
@@ -67,14 +68,21 @@ public class CheckService {
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
 
         List<Integer> actualCheckNumbers = house.getCheckList().stream()
-                .map(Check::getCheckNumber).toList();
+                .map(Check::getCheckNumber)
+                .collect(Collectors.toList());
 
         Collections.sort(actualCheckNumbers);
-        int newCheckNumber = actualCheckNumbers.get(actualCheckNumbers.size()-1) + 1;
+
+        int newCheckNumber = 0;
+
+        if(actualCheckNumbers.size() != 0) {
+            newCheckNumber = actualCheckNumbers.get(actualCheckNumbers.size() - 1) + 1;
+        }
+
 
         List<Check> listOfNewChecks = new ArrayList<>();
         for(int i = 1; i <= numberOfChecks; i++){
-            newCheckNumber = newCheckNumber + i;
+            newCheckNumber = newCheckNumber + 1;
             Check newCheck = new Check(
                     house,
                     house.getHouseName(),

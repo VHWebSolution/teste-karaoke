@@ -7,6 +7,7 @@ public record SongsOnListResponse(
         String artist,
         String link,
         int runningTime,
-        String customerName
+        String customerName,
+        String checkId
 ) {
 }
