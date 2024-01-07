@@ -3,15 +3,9 @@ package com.vhws.karaoke.service;
 import com.vhws.karaoke.entity.dto.MusicDTO;
 import com.vhws.karaoke.entity.ecxeption.ResourceBadRequestException;
 import com.vhws.karaoke.entity.ecxeption.ResourceNotFoundException;
-import com.vhws.karaoke.entity.model.Check;
-import com.vhws.karaoke.entity.model.House;
-import com.vhws.karaoke.entity.model.Music;
-import com.vhws.karaoke.entity.model.Playlist;
+import com.vhws.karaoke.entity.model.*;
 import com.vhws.karaoke.entity.response.SongsOnListResponse;
-import com.vhws.karaoke.repository.CheckRepository;
-import com.vhws.karaoke.repository.HouseRepository;
-import com.vhws.karaoke.repository.MusicRepository;
-import com.vhws.karaoke.repository.PlaylistRepository;
+import com.vhws.karaoke.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +24,8 @@ public class MusicService {
     private CheckRepository checkRepository;
     @Autowired
     private PlaylistRepository playlistRepository;
+    @Autowired
+    private SongsOnListRepository songsOnListRepository;
 
     public List<MusicDTO> showAllSongs() {
         List<Music> musicList = musicRepository.findAll();
@@ -66,13 +62,17 @@ public class MusicService {
         return songsDTOlist;
     }
 
-    public List<MusicDTO> showPreviousSongs(String houseId){
+    public List<SongsOnListResponse> showPreviousSongs(String houseId){
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
-        List<Music> previousSongs = house.getPreviousSongs();
-        List<MusicDTO> previousSongsDTO = new ArrayList<>();
-        for(Music m:previousSongs){
-            MusicDTO song = createMusicDTO(m);
-            previousSongsDTO.add(song);
+        List<SongsOnList> previousSongs = house.getPreviousSongs();
+        List<SongsOnListResponse> previousSongsDTO = new ArrayList<>();
+        for(SongsOnList s:previousSongs){
+            if(s.getMusicId() == null){
+                System.out.println("The Song on list, mapped by id: "+ s.getSongsOnListId() + " does not contain a music.");
+            }else {
+                SongsOnListResponse songs = createSongsOnListResponse(s);
+                previousSongsDTO.add(songs);
+            }
         }
         Collections.reverse(previousSongsDTO);
         return previousSongsDTO;
@@ -80,15 +80,18 @@ public class MusicService {
 
     public List<SongsOnListResponse> showNextSongs(String houseId){
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
-        List<SongsOnListResponse> musicDTOList = new ArrayList<>();
-        for(Check c:house.getCheckList()){
-            if(c.getNextSong() != null){
-            SongsOnListResponse musicDTO = createSongsOnListResponse(c.getNextSong(), c);
-            musicDTOList.add(musicDTO);
+        List<SongsOnList> nextSongs = house.getNextSongs();
+        List<SongsOnListResponse> nextSongsDTO = new ArrayList<>();
+        for(SongsOnList s:nextSongs){
+            if(s.getMusicId() == null){
+                System.out.println("The Song on list, mapped by id: "+ s.getSongsOnListId() + " does not contain a music.");
+            }else {
+                SongsOnListResponse songs = createSongsOnListResponse(s);
+                nextSongsDTO.add(songs);
             }
         }
-        Collections.reverse(musicDTOList);
-        return musicDTOList;
+
+        return nextSongsDTO;
     }
 
     public MusicDTO addMusic(MusicDTO musicDTO){
@@ -99,48 +102,51 @@ public class MusicService {
         return musicDTO;
     }
 
-    public List<SongsOnListResponse> addToNextSong(String houseId, String checkId, String musicId){
+    public List<SongsOnListResponse> addToNextSong(String houseId, String checkId, String musicId) {
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
         Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
         Music music = musicRepository.findById(musicId).orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
-        if(check.getNextSong()!=null){
-            throw new ResourceBadRequestException("This check is already on the list!");
-        }
-        List<Music> nextSongs = house.getNextSongs();
-        nextSongs.add(music);
-        house.setNextSongs(nextSongs);
+
+        SongsOnList songOnList = createSongsOnList(music, check);
+        songOnList = songsOnListRepository.save(songOnList);
+
         check.setNextSong(music);
-        house = houseRepository.save(house);
+        house.getNextSongs().add(songOnList);
+
         checkRepository.save(check);
-        List<SongsOnListResponse> musicDTOList = new ArrayList<>();
-        for(Check c:house.getCheckList()){
-            SongsOnListResponse musicDTO = createSongsOnListResponse(c.getNextSong(), c);
-            musicDTOList.add(musicDTO);
+        houseRepository.save(house);
+
+        List<SongsOnListResponse> songsOnListResponse = new ArrayList<>();
+        for(SongsOnList s: house.getNextSongs()){
+            SongsOnListResponse song = createSongsOnListResponse(s);
+            songsOnListResponse.add(song);
         }
-        return musicDTOList;
+        return songsOnListResponse;
     }
 
-    public List<MusicDTO> addToPreviousSong(String houseId, String checkId){
+    public List<SongsOnListResponse> addToPreviousSong(String houseId, String checkId){
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
         Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
-        if(check.getNextSong()==null){
-            throw new ResourceBadRequestException("This check has no songs on the list!");
+
+        SongsOnList song = new SongsOnList();
+        for(SongsOnList s: house.getNextSongs()){
+            if(check.getCheckId().equals(s.getCheckId())){
+               song = s;
+            }
         }
-        List<Music> nextSongs = house.getNextSongs();
-        nextSongs.remove(check.getNextSong());
-        List<Music> previousSongs = house.getPreviousSongs();
-        previousSongs.add(check.getNextSong());
-        house.setPreviousSongs(previousSongs);
-        house.setNextSongs(nextSongs);
+
+        house.getNextSongs().remove(song);
+        house.getPreviousSongs().add(song);
         check.setNextSong(null);
         houseRepository.save(house);
         checkRepository.save(check);
-        List<MusicDTO> musicDTOList = new ArrayList<>();
-        for(Music song:previousSongs){
-            MusicDTO musicDTO = createMusicDTO(song);
-            musicDTOList.add(musicDTO);
+
+        List<SongsOnListResponse> songsOnListResponse = new ArrayList<>();
+        for(SongsOnList s: house.getPreviousSongs()){
+            SongsOnListResponse songResponse = createSongsOnListResponse(s);
+            songsOnListResponse.add(songResponse);
         }
-        return musicDTOList;
+        return songsOnListResponse;
     }
 
     public MusicDTO changeMusic(MusicDTO musicDTO, String musicId){
@@ -188,16 +194,7 @@ public class MusicService {
     public void deleteMusic(String musicId){
         Music music = musicRepository.findById(musicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
-        List<House> houseList = houseRepository.findAll();
-        for(House house:houseList){
-            List<Music> nextSongs = house.getNextSongs();
-            nextSongs.remove(music);
-            List<Music> previousSongs = house.getPreviousSongs();
-            previousSongs.remove(music);
-            house.setNextSongs(nextSongs);
-            house.setPreviousSongs(previousSongs);
-            houseRepository.save(house);
-        }
+
         List<Playlist> playlistList = playlistRepository.findAll();
         for(Playlist playlist:playlistList){
             List<Music> songs = playlist.getSongs();
@@ -221,16 +218,28 @@ public class MusicService {
         );
     }
 
-    private SongsOnListResponse createSongsOnListResponse(Music music, Check check){
+    private SongsOnListResponse createSongsOnListResponse(SongsOnList s){
         return new SongsOnListResponse(
-                music.getMusicId(),
-                music.getTitle(),
-                music.getMusicGenre(),
-                music.getArtist(),
-                music.getLink(),
-                music.getRunningTime(),
-                check.getCustomerName(),
-                check.getCheckId()
+                s.getMusicId(),
+                s.getTitle(),
+                s.getMusicGenre(),
+                s.getArtist(),
+                s.getLink(),
+                s.getRunningTime(),
+                s.getCustomerName(),
+                s.getCheckId()
+        );
+    }
+    private SongsOnList createSongsOnList(Music m, Check c){
+        return new SongsOnList(
+                m.getMusicId(),
+                m.getTitle(),
+                m.getMusicGenre(),
+                m.getArtist(),
+                m.getLink(),
+                m.getRunningTime(),
+                c.getCustomerName(),
+                c.getCheckId()
         );
     }
 }

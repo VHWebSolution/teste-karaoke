@@ -5,6 +5,7 @@ import java.util.List;
 import com.vhws.karaoke.entity.model.Check;
 import com.vhws.karaoke.entity.model.Music;
 
+import com.vhws.karaoke.entity.model.SongsOnList;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ public class HouseDTO {
     private String phone;
     private String address;
     private List<Check> checkList;
-    private List<Music> previousSongs;
-    private List<Music> nextSongs;
+    private List<SongsOnList> previousSongs;
+    private List<SongsOnList> nextSongs;
     private String picture;
 }

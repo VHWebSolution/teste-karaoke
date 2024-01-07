@@ -36,8 +36,8 @@ public class MusicController {
     }
 
     @GetMapping("/showPreviousSongs/{houseId}")
-    public ResponseEntity<List<MusicDTO>> showPreviousSongs(@PathVariable String houseId){
-        List<MusicDTO> songs = musicService.showPreviousSongs(houseId);
+    public ResponseEntity<List<SongsOnListResponse>> showPreviousSongs(@PathVariable String houseId){
+        List<SongsOnListResponse> songs = musicService.showPreviousSongs(houseId);
         return new ResponseEntity<>(songs, HttpStatus.OK);
     }
 
@@ -60,8 +60,8 @@ public class MusicController {
     }
 
     @PutMapping("/addToPreviousSong/{houseId}/{checkId}")
-    public ResponseEntity<List<MusicDTO>> addToPreviousSong(@PathVariable String houseId, @PathVariable String checkId){
-        List<MusicDTO> musicDTOs = musicService.addToPreviousSong(houseId, checkId);
+    public ResponseEntity<List<SongsOnListResponse>> addToPreviousSong(@PathVariable String houseId, @PathVariable String checkId){
+        List<SongsOnListResponse> musicDTOs = musicService.addToPreviousSong(houseId, checkId);
         return new ResponseEntity<>(musicDTOs, HttpStatus.OK);
     }
 
