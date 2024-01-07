@@ -107,6 +107,10 @@ public class MusicService {
         Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
         Music music = musicRepository.findById(musicId).orElseThrow(() -> new ResourceNotFoundException("Music not found!"));
 
+        if(check.getNextSong() != null){
+            throw  new ResourceBadRequestException("This check is already on the list!");
+        }
+
         SongsOnList songOnList = createSongsOnList(music, check);
         songOnList = songsOnListRepository.save(songOnList);
 
@@ -127,6 +131,9 @@ public class MusicService {
     public List<SongsOnListResponse> addToPreviousSong(String houseId, String checkId){
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
         Check check = checkRepository.findById(checkId).orElseThrow(() -> new ResourceNotFoundException("Check not found!"));
+        if(check.getNextSong() == null){
+            throw new ResourceBadRequestException("This check has no songs in the list!");
+        }
 
         SongsOnList song = new SongsOnList();
         for(SongsOnList s: house.getNextSongs()){
