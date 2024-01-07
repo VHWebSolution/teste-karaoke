@@ -82,8 +82,10 @@ public class MusicService {
         House house = houseRepository.findById(houseId).orElseThrow(() -> new ResourceNotFoundException("House not found!"));
         List<SongsOnListResponse> musicDTOList = new ArrayList<>();
         for(Check c:house.getCheckList()){
+            if(c.getNextSong() != null){
             SongsOnListResponse musicDTO = createSongsOnListResponse(c.getNextSong(), c);
             musicDTOList.add(musicDTO);
+            }
         }
         Collections.reverse(musicDTOList);
         return musicDTOList;
